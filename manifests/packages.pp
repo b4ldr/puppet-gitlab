@@ -96,26 +96,61 @@ class gitlab::packages inherits gitlab {
   # ===================================
   include postfix
 
-
   ## Nginx
-  # =========
-    
-  apt::ppa { 'ppa:nginx/stable':
+  # ===================================
+  include nginx
+  nginx::resource::upstream { 'gitlab':
+    ensure  => present,
+    members => [
+      "unix:${gitlab::git_home}/gitlab/tmp/sockets/gitlab.socket"
+    ]
   }
-
-  # Install key for repo (otherwise it prints error)
-  apt::key { 'ppa:nginx/stable':
-      key   =>  'C300EE8C',
+  if $gitlab::gitlab_ssl {
+    $nginx_listen_port = 443
+    $nginx_add_header = {
+      strict_transport_security => 'max-age=31536000; includeSubDomains'
+    }
+    $nginx_proxy_header = [
+      'Host $http_host',
+      'X-Real-IP $remote_addr',
+      'X-Forwarded-For $proxy_add_x_forwarded_for',
+      'X-Forwarded-Proto $scheme',
+      'X-Forwarded-Ssl   on',
+    ]
+    nginx::resource::vhost { 'gitlab-redirect':
+      ensure           => present,
+      rewrite_to_https => true,
+      www_root         => "${gitlab::git_home}/gitlab/public",
+    }
+  } else {
+    $nginx_listen_port = 80
+    $nginx_add_header = undef
+    $nginx_proxy_header = [
+      'Host $http_host',
+      'X-Real-IP $remote_addr',
+      'X-Forwarded-For $proxy_add_x_forwarded_for',
+      'X-Forwarded-Proto $scheme',
+    ]
   }
-
-  package { 'nginx':
-    ensure  =>  latest,
-    require =>  [
-        Apt::Ppa['ppa:nginx/stable'],
-        Apt::Key['ppa:nginx/stable'],
-                ],
+  nginx::resource::vhost { $::fqdn:
+    ensure      => present,
+    listen_port => $nginx_listen_port,
+    www_root    => "${gitlab::git_home}/gitlab/public",
+    ssl         => $gitlab::gitlab_ssl,
+    ssl_cert    => $gitlab::gitlab_ssl_cert,
+    ssl_key     => $gitlab::gitlab_ssl_key,
+    add_header  => $nginx_add_header,
+    try_files   => ['$uri', '$uri/index.html', '$uri.html', '@gitlab']
   }
-  
-  
+  nginx::resource::location { '@gitlab':
+    location              => '@gitlab',
+    proxy                 => 'http://gitlab',
+    vhost                 => $::fqdn,
+    ssl                   => $gitlab::gitlab_ssl,
+    ssl_only              => $gitlab::gitlab_ssl,
+    proxy_read_timeout    => 300,
+    proxy_connect_timeout => 300,
+    proxy_set_header      => $nginx_proxy_header,
+  }
 
 }# end packages.pp

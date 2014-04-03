@@ -37,13 +37,4 @@ class gitlab::service inherits gitlab {
     group   =>  'git',
     mode    =>  '0644',
   }
-
-  service { 'nginx' :
-    ensure      =>  running,
-    enable      =>  true,
-    hasrestart  =>  true,
-    hasstatus   =>  true,
-    require     =>  Service ['gitlab'],
-  }
-
 }

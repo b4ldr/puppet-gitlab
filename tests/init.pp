@@ -10,7 +10,6 @@
 	class { 'mysql::server':
 	  root_password   => 'foo', 
 	}
-
   
   class { 'gitlab' : 
 #	  git_user               => 'git',

@@ -68,42 +68,6 @@ class gitlab::config inherits gitlab {
     require => File["${gitlab::git_home}/gitlab/${gitlab::backup_path}"],
   }
 
-
-# NGINX CONFIG
-#############
-
-  # Create nginx sites-available directory
-  file { '/etc/nginx/sites-available':
-    ensure  =>  directory,
-    owner   =>  'root',
-    group   =>  'root',
-  }
-
-  # Create nginx sites-enabled directory
-  file { '/etc/nginx/sites-enabled':
-    ensure  =>  directory,
-    owner   =>  'root',
-    group   =>  'root',
-  }
-
-  # Copy nginx config to sites-available
-  file { '/etc/nginx/sites-available/gitlab':
-    ensure  =>  file,
-    content =>  template('gitlab/nginx-gitlab.conf.erb'),
-    mode    =>  '0644',
-    owner   =>  'root',
-    group   =>  'root',
-  }
-
-  # Create symbolic link
-  file  { '/etc/nginx/sites-enabled/gitlab':
-    ensure  =>  link,
-    target  =>  '/etc/nginx/sites-available/gitlab',
-    owner   =>  'root',
-    group   =>  'root',
-  }
-
-
 # Gitlab-shell CONFIG
 ####################
   

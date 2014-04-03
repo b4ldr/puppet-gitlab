@@ -98,11 +98,6 @@ class gitlab (
       fail('Gitlab 6-4 and newer replaced $project_public_default with $visibility_level, please update your manifests. See http://bit.ly/1egMAW2')
     }
   }
-  
-  
-
-	
-
 	# Include all resources
 	include gitlab::packages
 	include gitlab::user
