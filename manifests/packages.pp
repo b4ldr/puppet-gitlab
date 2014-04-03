@@ -116,8 +116,9 @@ class gitlab::packages inherits gitlab {
       'X-Forwarded-Proto $scheme',
       'X-Forwarded-Ssl   on',
     ]
-    nginx::resource::vhost { 'gitlab-redirect':
+    nginx::resource::vhost { "${::fqdn}-redirect":
       ensure           => present,
+      server_name      => [$::fqdn],
       rewrite_to_https => true,
       www_root         => "${gitlab::git_home}/gitlab/public",
     }
