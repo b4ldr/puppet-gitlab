@@ -10,7 +10,7 @@
 	class { 'mysql::server':
 	  root_password   => 'foo', 
 	}
-  
+  class { 'nginx': } 
   class { 'gitlab' : 
 #	  git_user               => 'git',
 #	  git_home               => '/home/git',

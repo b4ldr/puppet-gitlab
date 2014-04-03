@@ -98,7 +98,6 @@ class gitlab::packages inherits gitlab {
 
   ## Nginx
   # ===================================
-  include nginx
   nginx::resource::upstream { 'gitlab':
     ensure  => present,
     members => [
