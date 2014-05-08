@@ -7,11 +7,11 @@
   
 #This is the syntax to create a mysql server in puppetlabs-mysql version > 2.0.0
 #Use caution as it could overwrite an existing database
-	class { 'mysql::server':
+	class { '::mysql::server':
 	  root_password   => 'foo', 
 	}
-  class { 'nginx': } 
-  class { 'gitlab' : 
+  class { '::nginx': } 
+  class { '::gitlab' : 
 #	  git_user               => 'git',
 #	  git_home               => '/home/git',
 	  git_email              => 'git@foo.com',
