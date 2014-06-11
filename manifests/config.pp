@@ -59,15 +59,6 @@ class gitlab::config inherits gitlab {
     recurse =>  true,
   }
   
-  # Execute rake backup every night at 2 am
-  cron { logrotate:
-    command => "cd /home/git/gitlab && PATH=/usr/local/bin:/usr/bin:/bin bundle exec rake gitlab:backup:create RAILS_ENV=production",
-    user    => git,
-    hour    => 2,
-    minute  => 0,
-    require => File["${gitlab::git_home}/gitlab/${gitlab::backup_path}"],
-  }
-
 # Gitlab-shell CONFIG
 ####################
   
