@@ -108,7 +108,7 @@ class gitlab::packages inherits gitlab {
   if $gitlab::gitlab_ssl {
     $nginx_listen_port = 443
     $nginx_add_header = {
-      'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains'
+      'Strict-Transport-Security' => 'max-age=31536000'
     }
     $nginx_proxy_header = [
       'Host $http_host',
