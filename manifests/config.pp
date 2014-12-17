@@ -105,15 +105,6 @@ class gitlab::config inherits gitlab {
       compress      => true;
 
   }
-  # Setup logrotate config file
-  file { '/etc/logrotate.d/gitlab':
-    ensure  => present,
-    content => template('gitlab/logrotate.erb'),
-    mode    => '0644',
-    owner   => 'root',
-    group   => 'root',
-  }
-
 
 # Git CONFIG
 ###########
