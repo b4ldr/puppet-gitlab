@@ -3,59 +3,57 @@ class gitlab::config inherits gitlab {
 
   # All file resource declarations should be executed as git:git
   File {
-    owner   =>  "${gitlab::git_user}",
-    group   =>  'git',
+    owner => $gitlab::git_user,
+    group => 'git',
   }
 
 
 # Gitlab CONFIG
 ##############
- 
   # Create log directory
   file { "${gitlab::git_home}/gitlab/log":
-    ensure  =>  directory,
-    mode    =>  '0755',
+    ensure => directory,
+    mode   => '0755',
   }
 
   # Create tmp directory
   file { "${gitlab::git_home}/gitlab/tmp":
-    ensure  =>  directory,
-    mode    =>  '0755',
+    ensure => directory,
+    mode   => '0755',
   }
 
   # Create pids directory
   file { "${gitlab::git_home}/gitlab/tmp/pids" :
-    ensure  =>  directory,
-    mode    =>  '0755',
+    ensure => directory,
+    mode   => '0755',
   }
 
   # Create socket directory
   file { "${gitlab::git_home}/gitlab/tmp/sockets" :
-    ensure  =>  directory,
-    mode    =>  '0755',
+    ensure => directory,
+    mode   => '0755',
   }
 
   # Create satellites directory
   file { "${gitlab::git_home}/gitlab-satellites":
-    ensure  =>  directory,
-    mode    =>  '0755',
+    ensure => directory,
+    mode   => '0755',
   }
 
   # Create public/uploads directory otherwise backups will fail
   file { "${gitlab::git_home}/gitlab/public/uploads":
-    ensure  =>  directory,
-    mode    =>  '0755',
+    ensure => directory,
+    mode   => '0755',
   }
   
 # Backup CONFIG
 ##############
- 
   # Ensure /home/git/gitlab/tmp/backups is owned by git user
   file { "${gitlab::git_home}/gitlab/${gitlab::backup_path}":
     ensure  =>  directory,
     owner   =>  'git',
     group   =>  'git',
-    mode    =>  '0755', 
+    mode    =>  '0755',
     recurse =>  true,
   }
   
@@ -64,35 +62,56 @@ class gitlab::config inherits gitlab {
   
   # Verify .ssh directory exists
   file { "${gitlab::git_home}/.ssh":
-    ensure  =>  directory,
-    mode    =>  '0700',    
+    ensure => directory,
+    mode   => '0700',
   }
   
   # Verify authorized keys file exists
   file  { "${gitlab::git_home}/authorized_keys":
-    ensure  =>  present,
-    mode    =>  '0600',
+    ensure => present,
+    mode   => '0600',
   }
 
 
   # Show error when users forget to add key
   file  { "${gitlab::git_home}/ssh-banner.txt":
-    ensure  =>  file,
-    source  =>  'puppet:///modules/gitlab/ssh-banner.txt',
-    mode    =>  '0755',
+    ensure => file,
+    source => 'puppet:///modules/gitlab/ssh-banner.txt',
+    mode   => '0755',
   }
   
 
 # Logrotate CONFIG
 #################
 
+  logrotate::rule {
+    'gitlab':
+      path          => "${gitlab::git_home}/log/*.log",
+      rotate        => 5,
+      size          => '100M',
+      ifempty       => false,
+      copytruncate  => true,
+      missingok     => true,
+      delaycompress => true,
+      compress      => true;
+    'gitlab-shell':
+      path          => "${gitlab::git_home}/gitlab-shell/gitlab-shell.log",
+      rotate        => 5,
+      size          => '100M',
+      ifempty       => false,
+      copytruncate  => true,
+      missingok     => true,
+      delaycompress => true,
+      compress      => true;
+
+  }
   # Setup logrotate config file
   file { '/etc/logrotate.d/gitlab':
-    ensure  =>  present,
-    content =>  template('gitlab/logrotate.erb'),
-    mode    =>  '0644',
-    owner   =>  'root',
-    group   =>  'root',
+    ensure  => present,
+    content => template('gitlab/logrotate.erb'),
+    mode    => '0644',
+    owner   => 'root',
+    group   => 'root',
   }
 
 
@@ -101,42 +120,42 @@ class gitlab::config inherits gitlab {
 
   # Sets sudo -u git -H git config --global user.name, user.email, autocrlf = input
   file { "${gitlab::git_home}/.gitconfig":
-    ensure  =>  file,
-    content =>  template('gitlab/gitconfig.erb'),
-    mode    =>  '0644',
-    owner   =>  "${gitlab::git_user}",
+    ensure  => file,
+    content => template('gitlab/gitconfig.erb'),
+    mode    => '0644',
+    owner   => $gitlab::git_user,
   }
 
   # Thumbnail logo white default
   file{"${gitlab::git_home}/gitlab/app/assets/images/gitlab-logo-white.png":
-    source  =>  'puppet:///modules/gitlab/gitlab-logo-white.png.erb',
-    owner   =>  "${gitlab::git_user}",
-    group   =>  'git',
-    mode    =>  '0644',
-    backup  =>  false,
+    source => 'puppet:///modules/gitlab/gitlab-logo-white.png.erb',
+    owner  => $gitlab::git_user,
+    group  => 'git',
+    mode   => '0644',
+    backup => false,
   }
 
   # Thumbnail logo black default
   file{"${gitlab::git_home}/gitlab/app/assets/images/gitlab-logo-black.png":
-    source  =>  'puppet:///modules/gitlab/gitlab-logo-black.png.erb',
-    owner   =>  "${gitlab::git_user}",
-    group   =>  'git',
-    mode    =>  '0644',
-    backup  =>  false,
+    source => 'puppet:///modules/gitlab/gitlab-logo-black.png.erb',
+    owner  => $gitlab::git_user,
+    group  => 'git',
+    mode   => '0644',
+    backup => false,
   }
 
   # Overwrite gitlab icons with custom icons
   # The origional icon is left intact and a symbolic link is used to point to logo-white.png
-  case "${gitlab::use_custom_thumbnail}" {
+  case $gitlab::use_custom_thumbnail {
 
-      'true': {
+      true: {
 
         # Set the thumbnails  to the custom icons in the gitlab/files directory
         file{ "${gitlab::git_home}/gitlab/app/assets/images/logo-white.png":
           ensure  =>  link,
           target  =>  "${gitlab::git_home}/company-logo-white.png",
           backup  =>  false,
-          owner   =>  "${gitlab::git_user}",
+          owner   =>  $gitlab::git_user,
           group   =>  'git',
           mode    =>  '0644',
           require =>  [
@@ -148,7 +167,7 @@ class gitlab::config inherits gitlab {
           ensure  =>  link,
           target  =>  "${gitlab::git_home}/company-logo-black.png",
           backup  =>  false,
-          owner   =>  "${gitlab::git_user}",
+          owner   =>  $gitlab::git_user,
           group   =>  'git',
           mode    =>  '0644',
           require =>  [
@@ -159,14 +178,14 @@ class gitlab::config inherits gitlab {
 
       }# end true
 
-      'false':  {
+      false:  {
 
         # Set the thumbnails to the default desert fox icon
         file{ "${gitlab::git_home}/gitlab/app/assets/images/logo-white.png":
           ensure  =>  link,
           target  =>  "${gitlab::git_home}/gitlab/app/assets/images/gitlab-logo-white.png",
           backup  =>  false,
-          owner   =>  "${gitlab::git_user}",
+          owner   =>  $gitlab::git_user,
           group   =>  'git',
           mode    =>  '0644',
           require =>  [
@@ -178,7 +197,7 @@ class gitlab::config inherits gitlab {
           ensure  =>  link,
           target  =>  "${gitlab::git_home}/gitlab/app/assets/images/gitlab-logo-black.png",
           backup  =>  false,
-          owner   =>  "${gitlab::git_user}",
+          owner   =>  $gitlab::git_user,
           group   =>  'git',
           mode    =>  '0644',
           require =>  [
